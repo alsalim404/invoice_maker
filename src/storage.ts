@@ -15,6 +15,8 @@ export const emptyEntity = (): Entity => ({
   bik: "",
   account: "",
   corrAccount: "",
+  kbe: "",
+  paymentPurposeCode: "",
   director: "",
   accountant: "",
   phone: "",
@@ -23,8 +25,9 @@ export const emptyEntity = (): Entity => ({
 
 export const emptyItem = () => ({
   id: crypto.randomUUID(),
+  code: "",
   title: "",
-  unit: "усл.",
+  unit: "шт",
   quantity: 1,
   price: 0,
   vatRate: 0,
@@ -41,6 +44,8 @@ const ownEntity: Entity = {
   bik: "CASPKZKA",
   account: "KZ000000000000000000",
   corrAccount: "",
+  kbe: "19",
+  paymentPurposeCode: "851",
   director: "Иванов Иван Иванович",
   accountant: "Иванов Иван Иванович",
   phone: "+7 700 000 00 00",
@@ -58,6 +63,8 @@ const counterparty: Entity = {
   bik: "",
   account: "",
   corrAccount: "",
+  kbe: "",
+  paymentPurposeCode: "",
   director: "",
   accountant: "",
   phone: "",
@@ -75,14 +82,15 @@ const invoice: InvoiceState = {
   items: [
     {
       id: crypto.randomUUID(),
+      code: "",
       title: "Услуги по договору",
-      unit: "усл.",
+      unit: "шт",
       quantity: 1,
       price: 100000,
       vatRate: 0,
     },
   ],
-  note: "Оплата по счету означает согласие с условиями поставки услуг.",
+  note: "Внимание! Оплата данного счета означает согласие с условиями поставки товара.\nУведомление об оплате обязательно, в противном случае не гарантируется наличие товара на складе. Товар отпускается по факту прихода денег на р/с Поставщика, самовывозом, при наличии доверенности и документов удостоверяющих личность.",
 };
 
 export const initialData: AppData = {
@@ -97,14 +105,32 @@ export function loadData(): AppData {
 
   try {
     const parsed = JSON.parse(stored) as AppData;
+    const ownEntities = parsed.ownEntities?.length ? parsed.ownEntities : initialData.ownEntities;
+    const counterparties = parsed.counterparties?.length ? parsed.counterparties : initialData.counterparties;
+    const invoice = parsed.invoice ?? initialData.invoice;
+
     return {
-      ownEntities: parsed.ownEntities?.length ? parsed.ownEntities : initialData.ownEntities,
-      counterparties: parsed.counterparties?.length ? parsed.counterparties : initialData.counterparties,
-      invoice: parsed.invoice ?? initialData.invoice,
+      ownEntities: ownEntities.map(normalizeEntity),
+      counterparties: counterparties.map(normalizeEntity),
+      invoice: {
+        ...initialData.invoice,
+        ...invoice,
+        items: (invoice.items?.length ? invoice.items : initialData.invoice.items).map((item) => ({
+          ...emptyItem(),
+          ...item,
+        })),
+      },
     };
   } catch {
     return initialData;
   }
+}
+
+function normalizeEntity(entity: Entity): Entity {
+  return {
+    ...emptyEntity(),
+    ...entity,
+  };
 }
 
 export function saveData(data: AppData) {

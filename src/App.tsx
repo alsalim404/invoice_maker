@@ -37,6 +37,8 @@ const fieldLabels: Array<[keyof Entity, string, string]> = [
   ["bik", "БИК", ""],
   ["account", "ИИК / расчетный счет", ""],
   ["corrAccount", "Корр. счет", ""],
+  ["kbe", "Кбе", "19"],
+  ["paymentPurposeCode", "Код назначения платежа", "851"],
   ["director", "Руководитель", ""],
   ["accountant", "Бухгалтер", ""],
   ["phone", "Телефон", ""],
@@ -327,6 +329,7 @@ function InvoiceView({
         <div className="items-table">
           <div className="items-head">
             <span>Наименование</span>
+            <span>Код</span>
             <span>Ед.</span>
             <span>Кол-во</span>
             <span>Цена</span>
@@ -336,6 +339,7 @@ function InvoiceView({
           {data.invoice.items.map((item) => (
             <div className="item-row" key={item.id}>
               <input value={item.title} onChange={(event) => updateItem(item.id, { title: event.target.value })} placeholder="Услуга или товар" />
+              <input value={item.code} onChange={(event) => updateItem(item.id, { code: event.target.value })} placeholder="Код" />
               <input value={item.unit} onChange={(event) => updateItem(item.id, { unit: event.target.value })} />
               <input inputMode="decimal" value={item.quantity} onChange={(event) => updateItem(item.id, { quantity: numberValue(event.target.value) })} />
               <input inputMode="decimal" value={item.price} onChange={(event) => updateItem(item.id, { price: numberValue(event.target.value) })} />

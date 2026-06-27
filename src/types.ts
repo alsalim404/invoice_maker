@@ -11,6 +11,8 @@ export type Entity = {
   bik: string;
   account: string;
   corrAccount: string;
+  kbe: string;
+  paymentPurposeCode: string;
   director: string;
   accountant: string;
   phone: string;
@@ -19,6 +21,7 @@ export type Entity = {
 
 export type InvoiceItem = {
   id: string;
+  code: string;
   title: string;
   unit: string;
   quantity: number;
