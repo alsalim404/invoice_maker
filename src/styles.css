@@ -168,6 +168,21 @@ h2 {
   text-decoration: none;
 }
 
+.pdf-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.download-ready.secondary {
+  background: #f2f5f4;
+  color: #32433e;
+}
+
+.download-ready.secondary:hover {
+  background: #e4ebe8;
+}
+
 .download-ready:hover {
   background: #d8eee7;
 }

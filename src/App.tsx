@@ -270,9 +270,14 @@ function InvoiceView({
           <FileDown size={19} /> PDF
         </button>
         {pdfFile && (
-          <a className="download-ready" href={pdfFile.url} download={pdfFile.filename}>
-            Скачать готовый PDF
-          </a>
+          <div className="pdf-actions">
+            <a className="download-ready" href={pdfFile.url} download={pdfFile.filename}>
+              Скачать готовый PDF
+            </a>
+            <a className="download-ready secondary" href={pdfFile.url} target="_blank" rel="noreferrer">
+              Открыть PDF
+            </a>
+          </div>
         )}
       </header>
 
