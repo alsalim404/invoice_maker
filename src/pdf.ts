@@ -1,7 +1,8 @@
 import type { Content, TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
 import type { Entity, InvoiceItem, InvoiceState } from "./types";
 
-type FontBundle = { pdfMake?: { vfs: Record<string, string> }; vfs?: Record<string, string> };
+type FontVfs = Record<string, string>;
+type FontBundle = FontVfs & { default?: FontVfs; pdfMake?: { vfs: FontVfs }; vfs?: FontVfs };
 
 const currencyLabels = {
   KZT: "KZT",
@@ -9,6 +10,10 @@ const currencyLabels = {
   USD: "USD",
   EUR: "EUR",
 };
+
+function resolveFontVfs(bundle: FontBundle): FontVfs {
+  return bundle.pdfMake?.vfs ?? bundle.vfs ?? bundle.default ?? bundle;
+}
 
 const currencyWords = {
   KZT: ["тенге", "тиын"],
@@ -307,8 +312,7 @@ export async function generateInvoicePdf(invoice: InvoiceState, issuer: Entity, 
     import("pdfmake/build/vfs_fonts"),
   ]);
 
-  (pdfMake as unknown as { vfs: Record<string, string> }).vfs =
-    (pdfFonts as FontBundle).pdfMake?.vfs ?? (pdfFonts as FontBundle).vfs ?? {};
+  (pdfMake as unknown as { vfs: FontVfs }).vfs = resolveFontVfs(pdfFonts as FontBundle);
 
   await new Promise<void>((resolve) => {
     pdfMake.createPdf(buildInvoiceDoc(invoice, issuer, customer)).getBlob((blob: Blob) => {
