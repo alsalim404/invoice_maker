@@ -1,3 +1,5 @@
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
 import type { Content, TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
 import type { Entity, InvoiceItem, InvoiceState } from "./types";
 
@@ -14,6 +16,8 @@ const currencyLabels = {
 function resolveFontVfs(bundle: FontBundle): FontVfs {
   return bundle.pdfMake?.vfs ?? bundle.vfs ?? bundle.default ?? bundle;
 }
+
+(pdfMake as unknown as { vfs: FontVfs }).vfs = resolveFontVfs(pdfFonts as FontBundle);
 
 const currencyWords = {
   KZT: ["тенге", "тиын"],
@@ -306,25 +310,6 @@ export function buildInvoiceDoc(invoice: InvoiceState, issuer: Entity, customer:
   };
 }
 
-export async function generateInvoicePdf(invoice: InvoiceState, issuer: Entity, customer: Entity) {
-  const [{ default: pdfMake }, { default: pdfFonts }] = await Promise.all([
-    import("pdfmake/build/pdfmake"),
-    import("pdfmake/build/vfs_fonts"),
-  ]);
-
-  (pdfMake as unknown as { vfs: FontVfs }).vfs = resolveFontVfs(pdfFonts as FontBundle);
-
-  await new Promise<void>((resolve) => {
-    pdfMake.createPdf(buildInvoiceDoc(invoice, issuer, customer)).getBlob((blob: Blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `schet-${invoice.number || "bez-nomera"}.pdf`;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      resolve();
-    });
-  });
+export function generateInvoicePdf(invoice: InvoiceState, issuer: Entity, customer: Entity) {
+  pdfMake.createPdf(buildInvoiceDoc(invoice, issuer, customer)).download(`schet-${invoice.number || "bez-nomera"}.pdf`);
 }
