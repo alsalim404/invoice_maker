@@ -4,8 +4,19 @@ const STORAGE_KEY = "invoice-maker:data:v1";
 
 const today = new Date().toISOString().slice(0, 10);
 
+const createId = () => {
+  if (crypto.randomUUID) return crypto.randomUUID();
+
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
+
 export const emptyEntity = (): Entity => ({
-  id: crypto.randomUUID(),
+  id: createId(),
   title: "",
   legalName: "",
   taxId: "",
@@ -24,7 +35,7 @@ export const emptyEntity = (): Entity => ({
 });
 
 export const emptyItem = () => ({
-  id: crypto.randomUUID(),
+  id: createId(),
   code: "",
   title: "",
   unit: "шт",
@@ -34,7 +45,7 @@ export const emptyItem = () => ({
 });
 
 const ownEntity: Entity = {
-  id: crypto.randomUUID(),
+  id: createId(),
   title: "Моя компания",
   legalName: "ТОО \"Моя компания\"",
   taxId: "000000000000",
@@ -53,7 +64,7 @@ const ownEntity: Entity = {
 };
 
 const counterparty: Entity = {
-  id: crypto.randomUUID(),
+  id: createId(),
   title: "Клиент",
   legalName: "ТОО \"Клиент\"",
   taxId: "111111111111",
@@ -81,7 +92,7 @@ const invoice: InvoiceState = {
   currency: "KZT",
   items: [
     {
-      id: crypto.randomUUID(),
+      id: createId(),
       code: "",
       title: "Услуги по договору",
       unit: "шт",
