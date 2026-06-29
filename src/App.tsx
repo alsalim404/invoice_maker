@@ -10,7 +10,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-import { calculateTotals, generateInvoicePdf } from "./pdf";
+import { calculateTotals, createInvoicePdfBlob } from "./pdf";
 import { downloadBackup, emptyEntity, emptyItem, loadData, saveData } from "./storage";
 import type { AppData, Entity, InvoiceItem, InvoiceState, RegistryKind } from "./types";
 
@@ -52,9 +52,16 @@ function App() {
   const [tab, setTab] = useState<Tab>("invoice");
   const [selectedOwnId, setSelectedOwnId] = useState(data.ownEntities[0]?.id ?? "");
   const [selectedCounterpartyId, setSelectedCounterpartyId] = useState(data.counterparties[0]?.id ?? "");
+  const [pdfFile, setPdfFile] = useState<{ url: string; filename: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => saveData(data), [data]);
+  useEffect(
+    () => () => {
+      if (pdfFile) URL.revokeObjectURL(pdfFile.url);
+    },
+    [pdfFile],
+  );
 
   const issuer = data.ownEntities.find((entity) => entity.id === data.invoice.issuerId) ?? data.ownEntities[0];
   const customer = data.counterparties.find((entity) => entity.id === data.invoice.customerId) ?? data.counterparties[0];
@@ -138,7 +145,20 @@ function App() {
       return;
     }
     try {
-      await generateInvoicePdf(data.invoice, issuer, customer);
+      const { blob, filename } = await createInvoicePdfBlob(data.invoice, issuer, customer);
+      const url = URL.createObjectURL(blob);
+
+      setPdfFile((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return { url, filename };
+      });
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
     } catch {
       alert("Не удалось сформировать PDF. Проверьте заполнение счета и попробуйте еще раз.");
     }
@@ -188,6 +208,7 @@ function App() {
             removeItem={removeItem}
             addItem={() => patchInvoice({ items: [...data.invoice.items, emptyItem()] })}
             createPdf={createPdf}
+            pdfFile={pdfFile}
           />
         )}
 
@@ -227,6 +248,7 @@ function InvoiceView({
   removeItem,
   addItem,
   createPdf,
+  pdfFile,
 }: {
   data: AppData;
   totals: ReturnType<typeof calculateTotals>;
@@ -235,6 +257,7 @@ function InvoiceView({
   removeItem: (id: string) => void;
   addItem: () => void;
   createPdf: () => void | Promise<void>;
+  pdfFile: { url: string; filename: string } | null;
 }) {
   return (
     <>
@@ -246,6 +269,11 @@ function InvoiceView({
         <button className="primary" onClick={createPdf}>
           <FileDown size={19} /> PDF
         </button>
+        {pdfFile && (
+          <a className="download-ready" href={pdfFile.url} download={pdfFile.filename}>
+            Скачать готовый PDF
+          </a>
+        )}
       </header>
 
       <div className="section-grid">

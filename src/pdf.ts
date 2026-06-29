@@ -310,6 +310,24 @@ export function buildInvoiceDoc(invoice: InvoiceState, issuer: Entity, customer:
   };
 }
 
-export function generateInvoicePdf(invoice: InvoiceState, issuer: Entity, customer: Entity) {
-  pdfMake.createPdf(buildInvoiceDoc(invoice, issuer, customer)).download(`schet-${invoice.number || "bez-nomera"}.pdf`);
+export function createInvoicePdfBlob(invoice: InvoiceState, issuer: Entity, customer: Entity) {
+  const filename = `schet-${invoice.number || "bez-nomera"}.pdf`;
+
+  return new Promise<{ blob: Blob; filename: string }>((resolve, reject) => {
+    try {
+      pdfMake.createPdf(buildInvoiceDoc(invoice, issuer, customer)).getBase64((base64: string) => {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+
+        for (let index = 0; index < binary.length; index += 1) {
+          bytes[index] = binary.charCodeAt(index);
+        }
+
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        resolve({ blob, filename });
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
 }
